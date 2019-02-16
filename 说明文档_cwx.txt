@@ -1,0 +1,48 @@
+功能
+=====================================================
+实现.exr文件转HDR视频
+The encoding is done using the high bit depth profiles of google's VP9 codec. 
+
+参考
+=====================================================
+https://github.com/gabrieleilertsen/lumahdrv
+
+安装依赖包
+=====================================================
+安装yasm
+wget http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz
+tar zxvf yasm-1.3.0.tar.gz
+cd yasm-1.3.0
+./configure
+make && make install
+
+编译
+=====================================================
+cd <path_to_luma_hdrv>
+mkdir build
+cd build
+cmake ../
+make
+make install
+
+输入输出
+=====================================================
+软链接到输入数据集
+ln -s /home/chenwx/hdrcnn/data/output data/input
+
+只能输出.mkv格式视频文件
+
+运行
+=====================================================
+--max-luminance 1000 设置过大，画面变暗
+
+命令：
+lumaenc --input data/input/%06d_out.exr --output data/output/out.mkv --frames 1:4275 --framerate 25 --encoding-bitdepth 10 --color-bitdepth 10 --ptf-bitdepth 10 --profile 2 --transfer-function PQ --color-space YCBCR --pre-scaling 20 --max-luminance 500 --min-luminance 0.01
+
+后修改
+=====================================================
+编码格式：VP9改为x265
+码率：改为4200Kb/s
+封装格式：.mkv改为.mp4
+
+ffmpeg -threads 8 -i data/output/out.mkv -vcodec libx265 -x265-params "input-depth=10:pass=1:input-res=1920x1080:preset=6:open-gop=0:b-adapt=0:bitrate=5000:fps=25:keyint=125:sao=1:amp=1:log2-max-poc-lsb=6:hrd=1:hdr=1:master-display=G(13250,34500)B(7500,3000)R(34000,16000)WP(15635,16450)L(10000000,20):max-cll="898,315":sar=1:videoformat=5:colorprim=9:transfer=16:colormatrix=9:chromaloc=2:output-depth=10:frame-threads=8" -f mp4 -movflags faststart data/output/out.mp4
